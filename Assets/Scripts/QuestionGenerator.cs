@@ -6,117 +6,54 @@ using TMPro;
 
 public class QuestionGenerator : MonoBehaviour
 {
-    [SerializeField] private QuestionData data;
+    private QuestionsData _questionsData;
+    private List<TankInfo> _tanksForQuestions;
 
-    public List<TankInfo> tanksForQuestions;
-
-    public Image tankImage;
-    public List<TankInfo> answers;
-    public TankInfo correctAnswer;
-    public List<TankInfo> tanksForAnswers;
-
-    public Button[] answerButtons;
-
-    public int correctAnswers;
-
-    // Start is called before the first frame update
-    void Start()
+    public List<Question> GenerateQuestions(QuestionsData questionsData)
     {
-        tanksForQuestions = new List<TankInfo>(data.tanks);
+        _questionsData = questionsData;
+        _tanksForQuestions = new List<TankInfo>(_questionsData.tanks);
 
-        this.GenerateQuestion();
-
-        //this.SetButtons();
+        List<Question> questions = new List<Question>();
+        for (int i = 0; i < _questionsData.tanks.Count; i++)
+        {
+            Question question = GenerateQuestion();
+            questions.Add(question);
+        }
+        return questions;
     }
 
-    // Update is called once per frame
-    void Update()
+    private Question GenerateQuestion()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            GenerateQuestion();
-        }
+        TankInfo correctAnswer = GenerateCorrectnaswer();
+        List<TankInfo> answers = GenerateAnswers(correctAnswer);
+        return new Question(answers, correctAnswer);
     }
 
-    private void GenerateQuestion()
+    private TankInfo GenerateCorrectnaswer()
     {
-        if (this.tanksForQuestions.Count > 0)
-        {
-
-            //берем рандомныйтанк из списка танков для ответа
-            int rdm = Random.Range(0, this.tanksForQuestions.Count);
-            this.correctAnswer = this.tanksForQuestions[rdm];
-            //удаляем танк из списка ответов, потому что уже использовали
-            this.tanksForQuestions.RemoveAt(rdm);
-
-            //создаем лист с танками для ответов, со всеми танками
-            this.tanksForAnswers = new List<TankInfo>(data.tanks);
-            //удалаяем из ответов который является правильным ответом
-            tanksForAnswers.Remove(this.correctAnswer);
-
-
-
-            this.answers.Clear();
-
-            int answerRandomizer = Random.Range(0, this.tanksForAnswers.Count);
-            this.answers.Add(this.tanksForAnswers[answerRandomizer]);
-            this.tanksForAnswers.RemoveAt(answerRandomizer);
-
-            answerRandomizer = Random.Range(0, this.tanksForAnswers.Count);
-            this.answers.Add(this.tanksForAnswers[answerRandomizer]);
-            this.tanksForAnswers.RemoveAt(answerRandomizer);
-
-            answerRandomizer = Random.Range(0, this.tanksForAnswers.Count);
-            this.answers.Add(this.tanksForAnswers[answerRandomizer]);
-            this.tanksForAnswers.RemoveAt(answerRandomizer);
-
-            answerRandomizer = Random.Range(0, this.tanksForAnswers.Count);
-            this.answers.Add(this.tanksForAnswers[answerRandomizer]);
-            this.tanksForAnswers.RemoveAt(answerRandomizer);
-
-            int corrctAnswerRandomizer = Random.Range(0, this.answers.Count);
-            this.answers[corrctAnswerRandomizer] = this.correctAnswer;
-
-            this.tankImage.sprite = this.correctAnswer.tankImage;
-
-            //this.UpdateButtonsText();
-            this.SetButtons();
-        }
-        else
-        {
-            //finish
-        }
+        int corectAnswerRandomizer = Random.Range(0, _tanksForQuestions.Count);
+        TankInfo corectAnswer = _tanksForQuestions[corectAnswerRandomizer];
+        _tanksForQuestions.RemoveAt(corectAnswerRandomizer);
+        return corectAnswer;
     }
 
-    private void SetButtons(){
+    private List<TankInfo> GenerateAnswers(TankInfo correctAnswer)
+    {
+        List<TankInfo> tanksForAnswers = new List<TankInfo>(_questionsData.tanks);
+        tanksForAnswers.Remove(correctAnswer);
+
+        List<TankInfo> answers = new List<TankInfo>();
         for (int i = 0; i < 4; i++)
         {
-            answerButtons[i].GetComponentInChildren<TMP_Text>().text = this.answers[i].tankName;
-            TankInfo aaa = this.answers[i];
-            answerButtons[i].onClick.RemoveAllListeners();
-            answerButtons[i].onClick.AddListener(() =>PressButton(aaa));
+            int answerRandomizer = Random.Range(0, tanksForAnswers.Count);
+            answers.Add(tanksForAnswers[answerRandomizer]);
+            tanksForAnswers.RemoveAt(answerRandomizer);
         }
-    }
 
-    private void UpdateButtonsText(){
-        // for (int i = 0; i < 4; i++)
-        // {
-        //     answerButtons[i].GetComponentInChildren<TMP_Text>().text = this.answers[i].tankName;
-        // }
-    }
+        int corrctAnswerRandomizer = Random.Range(0, answers.Count);
+        answers[corrctAnswerRandomizer] = correctAnswer;
 
-    private void PressButton(TankInfo tankInfo){
-        Debug.Log(tankInfo);
-        if(tankInfo == this.correctAnswer){
-            Debug.Log("correct");
-            correctAnswers++;
-        }else{
-            Debug.Log("wrong");
-        }
-        GenerateQuestion();
-    }
-
-    private void NewGame(){
-
+        return answers;
     }
 }
